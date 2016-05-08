@@ -1,0 +1,53 @@
+# Docker compose file for media server
+# Run docker-compose up in the directroy to spin up services
+
+### CONFIG
+# flexget:
+# - Set the host volume to the path where your flexget config.yml
+#   and db (if exists) is stored.
+# - If not create  directroy for it and create a config.yml file
+#
+# plex:
+# - Create a directroy for plex config files and allow it to be accessible
+# - by the plex user...
+#    $ mkdir ~/plex-config
+#    $ chown 797:797 -R ~/plex-config
+# - Set the media host volume to the path where you store your media
+# - ie : "/your/path:/media"
+#
+# transmission:
+# - Set the host volume to the path where you want transmission to download media
+
+
+version: '1'
+services:
+  flexget:
+    container_name: flexget
+    image: cptactionhank/flexget
+    volumes:
+     - /home/anthony/.flexget:/root/.flexget
+    network_mode: "host"
+    restart: always
+    depends_on:
+     - plex
+     - transmission
+
+  plex:
+    container_name: plex
+    image: wernight/plex-media-server:autoupdate
+    restart: always
+    volumes:
+      - "~/plex-config:/config"
+      - "/mnt/HDD/Media:/media"
+    ports:
+      -"32400:32400"
+
+  transmission:
+    container_name: transmission
+    image: dperson/transmission
+    network_mode: "host"
+    restart: always
+    ports:
+      - "9091:9091"
+    volumes:
+      - "/mnt/HDD/Downloads:/var/lib/transmission-daemon/downloads"
